@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>MARUBATSU</title>
+	<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+	<div class="main">
+		<table border="1" cellspacing="0">
+			<tr>
+				<td id="masu00">&nbsp;</td>
+				<td id="masu01">&nbsp;</td>
+				<td id="masu02">&nbsp;</td>
+			</tr>
+			<tr>
+				<td id="masu10">&nbsp;</td>
+				<td id="masu11">&nbsp;</td>
+				<td id="masu12">&nbsp;</td>
+			</tr>
+			<tr>
+				<td id="masu20">&nbsp;</td>
+				<td id="masu21">&nbsp;</td>
+				<td id="masu22">&nbsp;</td>
+			</tr>
+		</table>
+		<p>
+				<input type="button" onclick="AIstart()" value="start">
+				<div id="turn"></div>
+		</p>
+	</div>
+	<div id="log" class="log">
+		<table border="1" cellspacing="0">
+			<tr>
+				<td>内容</td>
+				<td>回数</td>
+				<td>割合</td>
+			</tr>
+			<tr>
+				<td>Q学習回数</td>
+				<td id="Qcicle">0</td>
+				<td>/</td>
+			</tr>
+			<tr>
+				<td>○勝利数</td>
+				<td id="winMaru">0</td>
+				<td id="wariMaru">0</td>
+			</tr>
+			<tr>
+				<td>×勝利数</td>
+				<td id="winBatsu">0</td>
+				<td id="wariBatsu">0</td>
+			</tr>
+			<tr>
+				<td>あいこ</td>
+				<td id="draw">0</td>
+				<td id="wariDraw">0</td>
+			</tr>
+		</table>
+	</div>
+	<script src="./src/index.js"></script>
+</body>
+</html>
