@@ -128,9 +128,9 @@ for (var qN = 0; qN < 2; qN++) {
 
 const alpha = 0.5; //学習率
 const gamma = 0.999; //割引率
-const epsilon = 2; //%
-const num = 1000000; //試行回数
-let score = 100000; //得点
+const epsilon = 5; //%
+const num = 100000; //試行回数
+let score = 200; //得点
 let AITurn = -1; //0 先行 1 後攻 -1 両方
 
 function AIstart() {
@@ -154,7 +154,7 @@ function AIGame() {
 	Qcicle++;
 	let ep = epsilon;
 	while (!endFlg) {
-		var r = putStonePic(Qnum,ep);
+		var r = putStonePic(Qnum, ep);
 		if (Qnum == AInum || AInum == -1) {
 			var NN = Math.pow(9, selectNumBuf) + selectLeft[Qnum] + QNextPosi[Qnum];
 			if (selectNumBuf == 0) {
@@ -174,12 +174,12 @@ function AIGame() {
 		} else {
 			Qnum = 0;
 			selectNumBuf++;
-			ep /= 2;
+			// ep /= 2;
 		}
 	}
 }
 
-function putStonePic(q,ep) {
+function putStonePic(q, ep) {
 	let returnScore = 0;
 	var spaceArr = searchStone();
 	var i, l;
@@ -207,7 +207,8 @@ function putStonePic(q,ep) {
 	if (endFlg) {
 		if (drawFlg) {
 			//draw
-			returnScore = score / 2;
+			// console.log(2);
+			returnScore = score/4;
 			if (q != AInum || AInum == -1) {
 				q = (q == 0) ? 1 : 0;
 				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1 - alpha) * Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (returnScore + gamma * maxValue(q, Qposi[q]));

@@ -2,10 +2,15 @@ body {
 	display: flex;
 }
 
+$boxsize:50px;
+
 td {
-	width: 100px;
-	height: 100px;
+	width: $boxsize;
+	height: $boxsize;
 	text-align: center;
+	.log &{
+		width: $boxsize * 2;
+	}
 }
 
 .main {
