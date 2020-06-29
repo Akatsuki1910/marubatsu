@@ -9,6 +9,20 @@ window.onload = () => {
 	startGame();
 }
 
+let data = [];
+
+function dataDL() {
+	var blob = new Blob([JSON.stringify(data)], {
+		type: "text/plain"
+	});
+	var a = document.createElement("a");
+	a.href = URL.createObjectURL(blob);
+	a.target = '_blank';
+	a.download = 'a.json';
+	a.click();
+	data = [];
+}
+
 let turnFlg = true;
 let endFlg = false;
 
@@ -36,7 +50,28 @@ function putStone(e) {
 				break;
 		}
 		document.getElementById("Qcicle").innerHTML++;
+		if (Qcicle % (num / 1000) == 0) {
+			// console.log(2);
+			var p = {
+				first: Number(document.getElementById("wariMaru").innerHTML),
+				second: Number(document.getElementById("wariBatsu").innerHTML),
+				draw: Number(document.getElementById("wariDraw").innerHTML)
+			}
+			data.push(p);
+			// resetTable();
+		}
 	}
+}
+
+function resetTable() {
+	document.getElementById("Qcicle").innerHTML = 0;
+	document.getElementById("draw").innerHTML = 0;
+	document.getElementById("wariDraw").innerHTML = 0;
+	document.getElementById("winMaru").innerHTML = 0;
+	document.getElementById("wariMaru").innerHTML = 0;
+	document.getElementById("winBatsu").innerHTML = 0;
+	document.getElementById("wariBatsu").innerHTML = 0;
+	Qcicle = 0;
 }
 
 function boardReset() {
@@ -117,7 +152,7 @@ function checkGame() {
 let Q = [];
 for (var qN = 0; qN < 2; qN++) {
 	Q[qN] = [];
-	for (var rN = 0; rN < Math.pow(3, 3 * 3); rN++) {
+	for (var rN = 0; rN < Math.pow(3, 3 * 3) * 9; rN++) {
 		Q[qN][rN] = [];
 		for (var sN = 0; sN < Math.pow(3, 2); sN++) {
 			Q[qN][rN][sN] = 0;
@@ -127,17 +162,21 @@ for (var qN = 0; qN < 2; qN++) {
 
 
 const alpha = 0.5; //学習率
-const gamma = 0.999; //割引率
+const gamma = 0.9; //割引率
 const epsilon = 5; //%
-const num = 100000; //試行回数
-let score = 200; //得点
+const num = 1000000; //試行回数
+let score = 100; //得点
 let AITurn = -1; //0 先行 1 後攻 -1 両方
 
-function AIstart() {
-	AInum = AITurn;
+function AIstart(h) {
+	AInum = h;
+	boardReset();
 	for (let i = 0; i < num; i++) {
 		AIGame();
 		boardReset();
+		if(i%(num/100)==0){
+			// resetTable();
+		}
 	}
 }
 
@@ -147,24 +186,25 @@ let QBeforePosi = [0, 0];
 let QNextPosi = [0, 0];
 let selectLeft = [0, 0];
 let Qcicle = 0;
+let selectNumBuf = 1;
+let Qmem = 0;
 
 function AIGame() {
 	console.log(1);
-	let selectNumBuf = 0;
+	selectNumBuf = 1;
 	Qcicle++;
 	let ep = epsilon;
+	Qmem = 0;
 	while (!endFlg) {
 		var r = putStonePic(Qnum, ep);
 		if (Qnum == AInum || AInum == -1) {
-			var NN = Math.pow(9, selectNumBuf) + selectLeft[Qnum] + QNextPosi[Qnum];
-			if (selectNumBuf == 0) {
-				NN--;
-			} //first
-			selectLeft[Qnum] = Math.pow(9, selectNumBuf) * selectLeft[Qnum] + QNextPosi[Qnum];
-			if (Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] == void 0) {
-				Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = 0;
-			}
-			Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1 - alpha) * Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gamma * maxValue(Qnum, NN));
+			var NN = selectLeft[Qnum] * 9 + QNextPosi[Qnum] + 1 + Qmem;
+			Qmem += Math.pow(9, selectNumBuf);
+			// if (selectNumBuf == 0) NN--; //first
+			selectLeft[Qnum] = Math.pow(9, (selectNumBuf - 1)) * selectLeft[Qnum] + QNextPosi[Qnum];
+			var g = 0;
+			if (!endFlg) g = gamma * maxValue(Qnum, NN);
+			Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gamma * maxValue(Qnum, NN) - Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]]);
 			QBeforePosi[Qnum] = Qposi[Qnum];
 			Qposi[Qnum] = NN;
 		}
@@ -184,7 +224,7 @@ function putStonePic(q, ep) {
 	var spaceArr = searchStone();
 	var i, l;
 	if (Qnum == AInum || AInum == -1) {
-		var e = Math.floor(Math.random() * 100 + 1);
+		var e = Math.ceil( Math.random()*100 );
 		if (e <= ep) {
 			var r = Math.floor(Math.random() * (spaceArr.length));
 			i = spaceArr[r][0];
@@ -206,18 +246,16 @@ function putStonePic(q, ep) {
 	}
 	if (endFlg) {
 		if (drawFlg) {
-			//draw
-			// console.log(2);
-			returnScore = score/4;
+			returnScore = 0;//-score / 8;
 			if (q != AInum || AInum == -1) {
 				q = (q == 0) ? 1 : 0;
-				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1 - alpha) * Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (returnScore + gamma * maxValue(q, Qposi[q]));
+				Q[q][QBeforePosi[q]][QNextPosi[q]] = Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (returnScore  - Q[q][QBeforePosi[q]][QNextPosi[q]]);
 			}
 		} else {
 			returnScore = score;
 			if (q != AInum || AInum == -1) {
 				q = (q == 0) ? 1 : 0;
-				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1 - alpha) * Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (-returnScore + gamma * maxValue(q, Qposi[q]));
+				Q[q][QBeforePosi[q]][QNextPosi[q]] = Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (-returnScore - Q[q][QBeforePosi[q]][QNextPosi[q]]);
 			}
 		}
 	}

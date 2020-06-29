@@ -26,7 +26,17 @@
 			</tr>
 		</table>
 		<p>
-				<input type="button" onclick="AIstart()" value="start">
+				<input type="button" onclick="AIstart(0)" value="First">
+				<input type="button" onclick="AIstart(1)" value="Second">
+				<input type="button" onclick="AIstart(-1)" value="vs">
+		</p>
+		<p>
+			<input type="button" onclick="resetTable()" value="Reset Table">
+		</p>
+		<p>
+			<input type="button" onclick="dataDL()" value="data" id="fileDL">
+		</p>
+		<p>
 				<div id="turn"></div>
 		</p>
 	</div>
