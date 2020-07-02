@@ -189,26 +189,23 @@ let selectLeft = [0, 0];
 let Qcicle = 0;
 let selectNumBuf = 1;
 let Qmem = 0;
-let gammaMem = [0, 0];
+let g = [0, 0]
 
 function AIGame(ep) {
 	console.log(1);
 	selectNumBuf = 1;
 	Qcicle++;
 	Qmem = 0;
-	gammaMem = [0, 0];
 	while (!endFlg) {
 		var r = putStonePic(Qnum, ep);
 		if (AInum == -1) {
 			var NN = selectLeft[Qnum] * 9 + QNextPosi[Qnum] + 1 + Qmem;
 			Qmem += Math.pow(9, selectNumBuf);
+			// if (selectNumBuf == 0) NN--; //first
 			selectLeft[Qnum] = Math.pow(9, (selectNumBuf - 1)) * selectLeft[Qnum] + QNextPosi[Qnum];
-			if (endFlg) {
-				Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1-alpha)*Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gammaMem[Qnum]);
-			}else{
-				gammaMem[Qnum] = gamma * maxValue(Qnum, NN);
-				Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1-alpha)*Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gammaMem[Qnum]);
-			}
+			var g = 0;
+			g[Qnum] = gamma * maxValue(Qnum, NN);
+			Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1 - alpha) * Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + g[Qnum]);
 			QBeforePosi[Qnum] = Qposi[Qnum];
 			Qposi[Qnum] = NN;
 		}
@@ -227,7 +224,7 @@ function putStonePic(q, ep) {
 	var spaceArr = searchStone();
 	var i, l;
 	if (AInum == -1) {
-		var e = Math.floor(Math.random() * 99);//0~99
+		var e = Math.ceil(Math.random() * 100);
 		if (e <= ep) {
 			var r = Math.floor(Math.random() * (spaceArr.length));
 			i = spaceArr[r][0];
@@ -248,22 +245,23 @@ function putStonePic(q, ep) {
 	}
 	var d = document.getElementById("masu" + i + l);
 	putStone(d);
+	if (AInum == -1) {
+		QNextPosi[q] = i * 3 + l;
+	}
 	if (endFlg) {
 		if (drawFlg) {
 			returnScore = 0;
 			if (AInum == -1) {
 				q = (q == 0) ? 1 : 0;
-				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1-alpha)*Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (returnScore + gammaMem[q]);
+				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1 - alpha) * Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (returnScore + g[q]);
 			}
 		} else {
 			returnScore = score;
 			if (AInum == -1) {
 				q = (q == 0) ? 1 : 0;
-				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1-alpha)*Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (-returnScore + gammaMem[q]);
+				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1 - alpha) * Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (-returnScore + g[q]);
 			}
 		}
-	}else if (AInum == -1) {
-		QNextPosi[q] = i * 3 + l;
 	}
 	return returnScore;
 }
@@ -286,6 +284,9 @@ function epsilonGreedy(arr, q) {
 	let max = -score * 100;
 	for (let i = 0; i < arr.length; i++) {
 		var il = arr[i][0] * 3 + arr[i][1];
+		if (Q[q][Qposi[q]][il] == void 0) {
+			Q[q][Qposi[q]][il] = 0;
+		}
 		if (max <= Q[q][Qposi[q]][il]) {
 			rArr = [arr[i][0], arr[i][1]];
 			max = Q[q][Qposi[q]][il];
@@ -295,8 +296,9 @@ function epsilonGreedy(arr, q) {
 }
 
 function maxValue(q, n) {
-	let max = -score * 100;
-	let qarr = Q[q][n];
+	let max = -score;
+	let qarr = (Q[q][n] == void 0) ? [] : Q[q][n];
+	if (qarr.length == 0) max = 0;
 	for (let i = 0; i < qarr.length; i++) {
 		if (Q[q][n][i] >= max) {
 			max = Q[q][n][i];
