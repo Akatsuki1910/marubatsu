@@ -18,7 +18,7 @@ function dataDL() {
 	var a = document.createElement("a");
 	a.href = URL.createObjectURL(blob);
 	a.target = '_blank';
-	a.download = 'a.json';
+	a.download = 'data.json';
 	a.click();
 	data = [];
 }
@@ -151,7 +151,7 @@ function checkGame() {
 let Q = [];
 for (var qN = 0; qN < 2; qN++) {
 	Q[qN] = [];
-	for (var rN = 0; rN < Math.pow(3, 3 * 3) * 9; rN++) {
+	for (var rN = 0; rN < Math.pow(3, 3 * 3); rN++) {
 		Q[qN][rN] = [];
 		for (var sN = 0; sN < Math.pow(3, 2); sN++) {
 			Q[qN][rN][sN] = 0;
@@ -160,11 +160,11 @@ for (var qN = 0; qN < 2; qN++) {
 }
 
 
-const alpha = 0.04; //学習率
-const gamma = 0.9; //割引率
-const epsilon = 1; //%
+const alpha = 0.3; //学習率
+const gamma = 0.95; //割引率
+const epsilon = 20; //%
 const num = 50000; //試行回数
-let score = 1; //得点
+let score = 10; //得点
 let AITurn = -1; //0 先行 1 後攻 -1 両方
 
 function AIstart(h) {
@@ -172,12 +172,9 @@ function AIstart(h) {
 	boardReset();
 	let ep = epsilon;
 	for (let i = 0; i < num; i++) {
+		console.log(AInum);
 		AIGame(ep);
 		boardReset();
-		if (i % (num / 100) == 0) {
-			// resetTable();
-		}
-		// ep /= 1.001;
 	}
 }
 
@@ -190,27 +187,20 @@ let Qcicle = 0;
 let selectNumBuf = 1;
 let Qmem = 0;
 let gammaMem = [0, 0];
+let NN = [0,0];
 
 function AIGame(ep) {
-	console.log(1);
 	selectNumBuf = 1;
 	Qcicle++;
 	Qmem = 0;
 	gammaMem = [0, 0];
 	while (!endFlg) {
+		Qposi[Qnum] = returnQ();
 		var r = putStonePic(Qnum, ep);
 		if (AInum == -1) {
-			var NN = selectLeft[Qnum] * 9 + QNextPosi[Qnum] + 1 + Qmem;
-			Qmem += Math.pow(9, selectNumBuf);
-			selectLeft[Qnum] = Math.pow(9, (selectNumBuf - 1)) * selectLeft[Qnum] + QNextPosi[Qnum];
-			if (endFlg) {
-				Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1-alpha)*Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gammaMem[Qnum]);
-			}else{
-				gammaMem[Qnum] = gamma * maxValue(Qnum, NN);
-				Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1-alpha)*Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gammaMem[Qnum]);
-			}
-			QBeforePosi[Qnum] = Qposi[Qnum];
-			Qposi[Qnum] = NN;
+			NN[Qnum] = returnQ();
+			gammaMem[Qnum] = gamma * maxValue(Qnum, NN[Qnum]);
+			Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1 - alpha) * Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gammaMem[Qnum]);
 		}
 
 		if (Qnum == 0) {
@@ -218,6 +208,7 @@ function AIGame(ep) {
 		} else {
 			Qnum = 0;
 			selectNumBuf++;
+			Qmem += Math.pow(9, selectNumBuf);
 		}
 	}
 }
@@ -227,8 +218,8 @@ function putStonePic(q, ep) {
 	var spaceArr = searchStone();
 	var i, l;
 	if (AInum == -1) {
-		var e = Math.floor(Math.random() * 99);//0~99
-		if (e <= ep) {
+		var e = Math.floor(Math.random() * 99); //0~99
+		if (e < ep) {
 			var r = Math.floor(Math.random() * (spaceArr.length));
 			i = spaceArr[r][0];
 			l = spaceArr[r][1];
@@ -251,18 +242,15 @@ function putStonePic(q, ep) {
 	if (endFlg) {
 		if (drawFlg) {
 			returnScore = 0;
-			if (AInum == -1) {
-				q = (q == 0) ? 1 : 0;
-				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1-alpha)*Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (returnScore + gammaMem[q]);
-			}
 		} else {
 			returnScore = score;
-			if (AInum == -1) {
-				q = (q == 0) ? 1 : 0;
-				Q[q][QBeforePosi[q]][QNextPosi[q]] = (1-alpha)*Q[q][QBeforePosi[q]][QNextPosi[q]] + alpha * (-returnScore + gammaMem[q]);
-			}
 		}
-	}else if (AInum == -1) {
+		if (AInum == -1) {
+			q = (q == 0) ? 1 : 0;
+			Q[q][Qposi[q]][QNextPosi[q]] = (1 - alpha) * Q[q][Qposi[q]][QNextPosi[q]] + alpha * (-returnScore + gammaMem[q]);
+		}
+	}
+	if (AInum == -1) {
 		QNextPosi[q] = i * 3 + l;
 	}
 	return returnScore;
@@ -281,6 +269,24 @@ function searchStone() {
 	return rArr;
 }
 
+function returnQ(){
+	let r=0;
+	for (let i = 0; i < 3; i++) {
+		for (let l = 0; l < 3; l++) {
+			const s = document.getElementById("masu" + i + l).innerHTML;
+			const t = Math.pow(3,i*3+l);
+			if (s == "&nbsp;") {
+				r +=t*0;
+			}else if(s=="○"){
+				r+=t*1;
+			}else{
+				r+=t*2;
+			}
+		}
+	}
+	return r;
+}
+
 function epsilonGreedy(arr, q) {
 	let rArr = [];
 	let max = -score * 100;
@@ -296,8 +302,7 @@ function epsilonGreedy(arr, q) {
 
 function maxValue(q, n) {
 	let max = -score * 100;
-	let qarr = Q[q][n];
-	for (let i = 0; i < qarr.length; i++) {
+	for (let i = 0; i < Q[q][n].length; i++) {
 		if (Q[q][n][i] >= max) {
 			max = Q[q][n][i];
 		}
