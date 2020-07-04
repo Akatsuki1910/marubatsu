@@ -1,3 +1,6 @@
+var fs = require('fs');
+var jsonData =[];
+
 let Qposi = [0, 0];
 let QNextPosi = [0, 0];
 let gammaMem = [0, 0];
@@ -5,9 +8,9 @@ let NN = [0, 0];
 
 const alpha = 0.1;
 const gamma = 0.95;
-const epsilon = 0.2; //%
-const episode = 100000;
-const score = 1;
+const epsilon = 0.3; //%
+const episode = 30000;
+const score = 10;
 
 let win1 = 0;
 let win2 = 0;
@@ -28,8 +31,8 @@ for (var qN = 0; qN < 2; qN++) {
 function Main() {
 	console.log("Q vs Q");
 	AIstart(-1);
-	console.log("Q vs R");
-	AIstart(0);
+	// console.log("Q vs R");
+	// AIstart(0);
 	console.log("R vs Q");
 	AIstart(1);
 }
@@ -48,10 +51,15 @@ function AIstart(h) {
 	for (let i = 0; i < episode; i++) {
 		AIGame(h);
 		boardReset();
+		let jd = {
+			1:win1,
+			2:win2,
+			3:draw
+		};
+		jsonData.push(jd);
 	}
-	console.log(win1);
-	console.log(win2);
-	console.log(draw);
+	fs.writeFileSync('../data.json', JSON.stringify(jsonData));
+	console.log(win1,win2,draw);
 	pointClear();
 }
 
@@ -119,15 +127,15 @@ function searchStone() {
 }
 
 function epsilonGreedy(arr, q) {
-	let rArr = 0;
+	let r = 0;
 	let max = -score * 100;
 	for (let i = 0; i < arr.length; i++) {
-		if (max <= Q[q][Qposi[q]][arr[i]]) {
-			rArr = arr[i];
+		if (max < Q[q][Qposi[q]][arr[i]]) {
+			r = arr[i];
 			max = Q[q][Qposi[q]][arr[i]];
 		}
 	}
-	return rArr;
+	return r;
 }
 
 function putStone(x, q) {
