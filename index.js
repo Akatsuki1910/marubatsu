@@ -5,12 +5,13 @@ let Qposi = [0, 0];
 let QNextPosi = [0, 0];
 let gammaMem = [0, 0];
 let NN = [0, 0];
+let Qmem = [0, 0];
 
-const alpha = 0.3;
-const gamma = 0.99;
-const epsilon = 0.3; //%
-const episode = 1000000;
-const score = 10;
+const alpha = 0.5;
+const gamma = 0.9;
+const epsilon = 0.1;
+const episode = 100000;
+const score = 1;
 
 let win1 = 0;
 let win2 = 0;
@@ -30,10 +31,11 @@ for (var qN = 0; qN < 2; qN++) {
 
 function Main() {
 	console.log("episode:" + episode);
+	console.log("alpha" + alpha + " gamma" + gamma + " epsilon" + epsilon);
 	console.log("Q vs Q");
 	AIstart(-1);
-	// console.log("Q vs R");
-	// AIstart(0);
+	console.log("Q vs R");
+	AIstart(0);
 	console.log("R vs Q");
 	AIstart(1);
 }
@@ -52,24 +54,26 @@ function AIstart(h) {
 	for (let i = 0; i < episode; i++) {
 		AIGame(h);
 		boardReset();
-		let jd = {
-			1: win1,
-			2: win2,
-			3: draw
-		};
-		jsonData.push(jd);
+		if (i % (episode / 1000) == 0) {
+			let jd = {
+				1: win1,
+				2: win2,
+				3: draw
+			};
+			jsonData.push(jd);
+		}
 	}
 	fs.writeFileSync('./data.json', JSON.stringify(jsonData));
-	console.log('\x1b[36m%s\x1b[0m',win1);
-	console.log('\x1b[33m%s\x1b[0m',win2);
-	console.log('\x1b[37m%s\x1b[0m',draw);
-	console.log('\x1b[36m%s\x1b[0m',win1/episode);
-	console.log('\x1b[33m%s\x1b[0m',win2/episode);
-	console.log('\x1b[37m%s\x1b[0m',draw/episode);
+	console.log('\x1b[36m%s\x1b[0m', win1);
+	console.log('\x1b[33m%s\x1b[0m', win2);
+	console.log('\x1b[37m%s\x1b[0m', draw);
+	// console.log('\x1b[36m%s\x1b[0m',win1/episode);
+	// console.log('\x1b[33m%s\x1b[0m',win2/episode);
+	// console.log('\x1b[37m%s\x1b[0m',draw/episode);
 	pointClear();
 }
 
-let endFlg = false;
+let endFlg;
 
 function AIGame(h) {
 	let Qnum = 0; //0 maru 1 batsu
@@ -80,6 +84,7 @@ function AIGame(h) {
 		var r = putStonePic(Qnum, h);
 		if (h == -1) {
 			NN[Qnum] = returnQ();
+			Qmem[Qnum] = Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]];
 			QCalculation(Qnum, r);
 		}
 		Qnum = (Qnum == 0) ? 1 : 0;
@@ -89,7 +94,7 @@ function AIGame(h) {
 function returnQ() {
 	let r = 0;
 	for (let i = 0; i < 9; i++) {
-		r += Math.pow(3, i) * board[i];
+		r += Math.pow(3, i) * Number(board[i]);
 	}
 	return r;
 }
@@ -106,17 +111,21 @@ function putStonePic(q, h) {
 		i = (q == h) ? e : spaceArr[r];
 	}
 	QNextPosi[q] = i;
-	const flg = putStone(i, q);
+	const dFlg = putStone(i, q);
 	if (endFlg && h == -1) {
-		returnScore = (flg) ? 0 : score;
+		returnScore = (dFlg) ? 0 : score;
 		const p = (q == 0) ? 1 : 0;
+		Q[p][Qposi[p]][QNextPosi[p]] = Qmem[p];
 		QCalculation(p, -returnScore);
 
 		// let s = "";
 		// for (var k = 0; k < 9; k++) {
 		// 	s += board[k];
+		// 	if((k+1)%3==0){
+		// 		s+="\n";
+		// 	}
 		// }
-		// if (flg) q = 2;
+		// if (dFlg) q = 2;
 		// console.log(s, q);
 	}
 	return returnScore;
@@ -145,71 +154,23 @@ function epsilonGreedy(arr, q) {
 }
 
 function putStone(x, q) {
-	let drawFlg = true;
 	board[x] = (q + 1);
 
-	//yoko
-	for (let i = 0; i < 3; i++) {
-		let f = true;
-		for (let l = 0; l < 3 - 1; l++) {
-			const p = i * 3 + l;
-			if (board[p] == 0 || board[p] != board[p + 1]) {
-				f = false;
-				break;
-			}
-		}
-		if (f) {
-			endFlg = true;
-			break;
-		}
-	}
+	if (board[0] == board[1] && board[0] == board[2] && board[0] != 0) endFlg = true;
+	if (board[3] == board[4] && board[3] == board[5] && board[3] != 0) endFlg = true;
+	if (board[6] == board[7] && board[6] == board[8] && board[6] != 0) endFlg = true;
+	if (board[0] == board[3] && board[0] == board[6] && board[0] != 0) endFlg = true;
+	if (board[1] == board[4] && board[1] == board[7] && board[1] != 0) endFlg = true;
+	if (board[2] == board[5] && board[2] == board[8] && board[2] != 0) endFlg = true;
+	if (board[0] == board[4] && board[0] == board[8] && board[0] != 0) endFlg = true;
+	if (board[2] == board[4] && board[2] == board[6] && board[2] != 0) endFlg = true;
 
-	//tate
-	for (let i = 0; i < 3; i++) {
-		let f = true;
-		for (let l = 0; l < 3 - 1; l++) {
-			const p = l * 3 + i;
-			if (board[p] == 0 || board[p] != board[p + 3]) {
-				f = false;
-				break;
-			}
-		}
-		if (f) {
-			endFlg = true;
-			break;
-		}
-	}
-
-	//naname
-	let f = true;
-	for (let i = 0; i < 3 - 1; i++) {
-		const p = i * 3 + i;
-		if (board[p] == 0 || board[p] != board[p + 3 + 1]) {
-			f = false;
-			break;
-		}
-	}
-	if (f) {
-		endFlg = true;
-	}
-
-	//gyaku naname
-	f = true;
-	for (let i = 0; i < 3 - 1; i++) {
-		const p = i * 3 + (3 - 1 - i);
-		if (board[p] == 0 || board[p] != board[p + 3 - 1]) {
-			f = false;
-			break;
-		}
-	}
-	if (f) {
-		endFlg = true;
-	}
-
+	let drawFlg = true;
 	if (!endFlg) {
 		for (let i = 0; i < 9; i++) {
 			if (0 == board[i]) {
 				drawFlg = false;
+				break;
 			}
 		}
 		if (drawFlg) endFlg = true;
