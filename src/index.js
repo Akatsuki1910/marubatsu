@@ -5,8 +5,8 @@ let NN = [0, 0];
 
 const alpha = 0.04;
 const gamma = 0.9;
-const epsilon = 1; //%
-const episode = 1000000;
+const epsilon = 0.04; //%
+const episode = 100000;
 const score = 1;
 
 let win1 = 0;
@@ -64,11 +64,7 @@ function AIGame(h) {
 			Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1 - alpha) * Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gammaMem[Qnum]);
 		}
 
-		if (Qnum == 0) {
-			Qnum = 1;
-		} else {
-			Qnum = 0;
-		}
+		Qnum = (Qnum == 0) ? 1 : 0;
 	}
 	endFlg = false;
 }
@@ -88,16 +84,9 @@ function putStonePic(q, ep, h) {
 	const r = Math.floor(Math.random() * (spaceArr.length));
 	const e = epsilonGreedy(spaceArr, q);
 	if (h == -1) {
-		const epRan = Math.floor(Math.random() * 100); //0~99
-		if (epRan < ep) {
-			i = spaceArr[r];
-		} else {
-			i = e;
-		}
-	} else if (q == h) {
-		i = e;
+		i = (Math.random() < ep) ? spaceArr[r] : e;
 	} else {
-		i = spaceArr[r];
+		i = (q == h) ? e : spaceArr[r];
 	}
 	QNextPosi[q] = i;
 	const flg = putStone(i, q);
@@ -107,6 +96,13 @@ function putStonePic(q, ep, h) {
 			const p = (q == 0) ? 1 : 0;
 			Q[p][Qposi[p]][QNextPosi[p]] = (1 - alpha) * Q[p][Qposi[p]][QNextPosi[p]] + alpha * (-returnScore + gammaMem[p]);
 		}
+
+		let s = "";
+		for (var k = 0; k < 9; k++) {
+			s += board[k];
+		}
+		if (flg) q = 2;
+		// console.log(s, q);
 	}
 	return returnScore;
 }
@@ -125,9 +121,9 @@ function epsilonGreedy(arr, q) {
 	let rArr = 0;
 	let max = -score * 100;
 	for (let i = 0; i < arr.length; i++) {
-		if (max <= Q[q][Qposi[q]][i]) {
+		if (max <= Q[q][Qposi[q]][arr[i]]) {
 			rArr = arr[i];
-			max = Q[q][Qposi[q]][i];
+			max = Q[q][Qposi[q]][arr[i]];
 		}
 	}
 	return rArr;
@@ -170,17 +166,16 @@ function putStone(x, q) {
 	}
 
 	//naname
+	let f = true;
 	for (let i = 0; i < 3 - 1; i++) {
-		let f = true;
 		const p = i * 3 + i;
 		if (board[p] == 0 || board[p] != board[p + 3 + 1]) {
 			f = false;
 			break;
 		}
-		if (f) {
-			endFlg = true;
-			break;
-		}
+	}
+	if (f) {
+		endFlg = true;
 	}
 
 	if (!endFlg) {
@@ -194,19 +189,19 @@ function putStone(x, q) {
 		drawFlg = false;
 	}
 
-	if (episode - 10000 < Qcicle) {
-		if (endFlg) {
-			if (drawFlg) {
-				draw++;
+	// if (episode - 100000 <= Qcicle) {
+	if (endFlg) {
+		if (drawFlg) {
+			draw++;
+		} else {
+			if (q == 0) {
+				win1++;
 			} else {
-				if (q == 0) {
-					win1++;
-				} else {
-					win2++;
-				}
+				win2++;
 			}
 		}
 	}
+	// }
 	return drawFlg;
 }
 
