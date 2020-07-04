@@ -6,10 +6,10 @@ let QNextPosi = [0, 0];
 let gammaMem = [0, 0];
 let NN = [0, 0];
 
-const alpha = 0.1;
-const gamma = 0.95;
+const alpha = 0.3;
+const gamma = 0.99;
 const epsilon = 0.3; //%
-const episode = 50000;
+const episode = 1000000;
 const score = 10;
 
 let win1 = 0;
@@ -59,7 +59,7 @@ function AIstart(h) {
 		};
 		jsonData.push(jd);
 	}
-	fs.writeFileSync('../data.json', JSON.stringify(jsonData));
+	fs.writeFileSync('./data.json', JSON.stringify(jsonData));
 	console.log('\x1b[36m%s\x1b[0m',win1);
 	console.log('\x1b[33m%s\x1b[0m',win2);
 	console.log('\x1b[37m%s\x1b[0m',draw);
