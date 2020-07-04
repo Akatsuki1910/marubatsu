@@ -1,13 +1,11 @@
 window.onload = () => {
 	for (let i = 0; i < 3; i++) {
 		for (let l = 0; l < 3; l++) {
-			document.getElementById("masu" + i + l).onclick = (e) => {
-				putStone(e.target);
-			}
+			document.getElementById("masu" + i + l).onclick = (e) => putStone(e.target);
 		}
 	}
 	startGame();
-}
+};
 
 let data = [];
 
@@ -90,7 +88,8 @@ function startGame() {
 	Qnum = 0; //0 maru 1 batsu
 	Qposi = [0, 0];
 	QNextPosi = [0, 0];
-	selectLeft = [0, 0];
+	gammaMem = [0, 0];
+	NN = [0, 0];
 }
 
 let winner = "";
@@ -160,19 +159,18 @@ for (var qN = 0; qN < 2; qN++) {
 }
 
 
-const alpha = 0.3; //学習率
-const gamma = 0.95; //割引率
-const epsilon = 20; //%
-const num = 50000; //試行回数
+const alpha = 0.1; //学習率
+const gamma = 0.9; //割引率
+const epsilon = 10; //%
+let num = 30000; //試行回数
 let score = 10; //得点
 let AITurn = -1; //0 先行 1 後攻 -1 両方
 
 function AIstart(h) {
 	AInum = h;
 	boardReset();
-	let ep = epsilon;
+	let ep = (AITurn == -1) ? epsilon : 0;
 	for (let i = 0; i < num; i++) {
-		console.log(AInum);
 		AIGame(ep);
 		boardReset();
 	}
@@ -180,20 +178,15 @@ function AIstart(h) {
 
 let Qnum = 0; //0 maru 1 batsu
 let Qposi = [0, 0];
-let QBeforePosi = [0, 0];
 let QNextPosi = [0, 0];
-let selectLeft = [0, 0];
 let Qcicle = 0;
-let selectNumBuf = 1;
-let Qmem = 0;
 let gammaMem = [0, 0];
-let NN = [0,0];
+let NN = [0, 0];
 
 function AIGame(ep) {
-	selectNumBuf = 1;
 	Qcicle++;
-	Qmem = 0;
 	gammaMem = [0, 0];
+	// console.log(AInum);
 	while (!endFlg) {
 		Qposi[Qnum] = returnQ();
 		var r = putStonePic(Qnum, ep);
@@ -207,51 +200,42 @@ function AIGame(ep) {
 			Qnum = 1;
 		} else {
 			Qnum = 0;
-			selectNumBuf++;
-			Qmem += Math.pow(9, selectNumBuf);
 		}
 	}
 }
 
 function putStonePic(q, ep) {
 	let returnScore = 0;
-	var spaceArr = searchStone();
-	var i, l;
+	let spaceArr = searchStone();
+	let i, l;
+	const r = Math.floor(Math.random() * (spaceArr.length));
+	const e = epsilonGreedy(spaceArr, q);
 	if (AInum == -1) {
-		var e = Math.floor(Math.random() * 99); //0~99
-		if (e < ep) {
-			var r = Math.floor(Math.random() * (spaceArr.length));
+		const epRan = Math.floor(Math.random() * 100); //0~99
+		if (epRan < ep) {
 			i = spaceArr[r][0];
 			l = spaceArr[r][1];
 		} else {
-			var r = epsilonGreedy(spaceArr, q);
-			i = r[0];
-			l = r[1];
+			i = e[0];
+			l = e[1];
 		}
-	} else if (Qnum == AInum) {
-		var r = epsilonGreedy(spaceArr, q);
-		i = r[0];
-		l = r[1];
+	} else if (q == AInum) {
+		i = e[0];
+		l = e[1];
 	} else {
-		var r = Math.floor(Math.random() * (spaceArr.length));
 		i = spaceArr[r][0];
 		l = spaceArr[r][1];
 	}
-	var d = document.getElementById("masu" + i + l);
+	QNextPosi[q] = i * 3 + l;
+	const d = document.getElementById("masu" + i + l);
 	putStone(d);
 	if (endFlg) {
-		if (drawFlg) {
-			returnScore = 0;
-		} else {
-			returnScore = score;
-		}
+		returnScore = (drawFlg)?0:score;
 		if (AInum == -1) {
-			q = (q == 0) ? 1 : 0;
-			Q[q][Qposi[q]][QNextPosi[q]] = (1 - alpha) * Q[q][Qposi[q]][QNextPosi[q]] + alpha * (-returnScore + gammaMem[q]);
+			console.log(AInum);
+			const p = (q == 0) ? 1 : 0;
+			Q[p][Qposi[p]][QNextPosi[p]] = (1 - alpha) * Q[p][Qposi[p]][QNextPosi[p]] + alpha * (-returnScore + gammaMem[p]);
 		}
-	}
-	if (AInum == -1) {
-		QNextPosi[q] = i * 3 + l;
 	}
 	return returnScore;
 }
@@ -269,18 +253,18 @@ function searchStone() {
 	return rArr;
 }
 
-function returnQ(){
-	let r=0;
+function returnQ() {
+	let r = 0;
 	for (let i = 0; i < 3; i++) {
 		for (let l = 0; l < 3; l++) {
 			const s = document.getElementById("masu" + i + l).innerHTML;
-			const t = Math.pow(3,i*3+l);
+			const t = Math.pow(3, i * 3 + l);
 			if (s == "&nbsp;") {
-				r +=t*0;
-			}else if(s=="○"){
-				r+=t*1;
-			}else{
-				r+=t*2;
+				r += t * 0;
+			} else if (s == "○") {
+				r += t * 1;
+			} else {
+				r += t * 2;
 			}
 		}
 	}
@@ -302,7 +286,7 @@ function epsilonGreedy(arr, q) {
 
 function maxValue(q, n) {
 	let max = -score * 100;
-	for (let i = 0; i < Q[q][n].length; i++) {
+	for (let i = 0; i < 9; i++) {
 		if (Q[q][n][i] >= max) {
 			max = Q[q][n][i];
 		}
