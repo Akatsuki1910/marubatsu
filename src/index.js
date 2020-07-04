@@ -1,5 +1,5 @@
 var fs = require('fs');
-var jsonData =[];
+var jsonData = [];
 
 let Qposi = [0, 0];
 let QNextPosi = [0, 0];
@@ -9,7 +9,7 @@ let NN = [0, 0];
 const alpha = 0.1;
 const gamma = 0.95;
 const epsilon = 0.3; //%
-const episode = 30000;
+const episode = 50000;
 const score = 10;
 
 let win1 = 0;
@@ -29,6 +29,7 @@ for (var qN = 0; qN < 2; qN++) {
 }
 
 function Main() {
+	console.log("episode:" + episode);
 	console.log("Q vs Q");
 	AIstart(-1);
 	// console.log("Q vs R");
@@ -52,14 +53,19 @@ function AIstart(h) {
 		AIGame(h);
 		boardReset();
 		let jd = {
-			1:win1,
-			2:win2,
-			3:draw
+			1: win1,
+			2: win2,
+			3: draw
 		};
 		jsonData.push(jd);
 	}
 	fs.writeFileSync('../data.json', JSON.stringify(jsonData));
-	console.log(win1,win2,draw);
+	console.log('\x1b[36m%s\x1b[0m',win1);
+	console.log('\x1b[33m%s\x1b[0m',win2);
+	console.log('\x1b[37m%s\x1b[0m',draw);
+	console.log('\x1b[36m%s\x1b[0m',win1/episode);
+	console.log('\x1b[33m%s\x1b[0m',win2/episode);
+	console.log('\x1b[37m%s\x1b[0m',draw/episode);
 	pointClear();
 }
 
@@ -179,6 +185,19 @@ function putStone(x, q) {
 	for (let i = 0; i < 3 - 1; i++) {
 		const p = i * 3 + i;
 		if (board[p] == 0 || board[p] != board[p + 3 + 1]) {
+			f = false;
+			break;
+		}
+	}
+	if (f) {
+		endFlg = true;
+	}
+
+	//gyaku naname
+	f = true;
+	for (let i = 0; i < 3 - 1; i++) {
+		const p = i * 3 + (3 - 1 - i);
+		if (board[p] == 0 || board[p] != board[p + 3 - 1]) {
 			f = false;
 			break;
 		}
