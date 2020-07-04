@@ -3,9 +3,9 @@ let QNextPosi = [0, 0];
 let gammaMem = [0, 0];
 let NN = [0, 0];
 
-const alpha = 0.04;
-const gamma = 0.9;
-const epsilon = 0.04; //%
+const alpha = 0.1;
+const gamma = 0.95;
+const epsilon = 0.2; //%
 const episode = 100000;
 const score = 1;
 
@@ -28,11 +28,16 @@ for (var qN = 0; qN < 2; qN++) {
 function Main() {
 	console.log("Q vs Q");
 	AIstart(-1);
+	console.log("Q vs R");
+	AIstart(0);
+	console.log("R vs Q");
+	AIstart(1);
+}
+
+function pointClear() {
 	win1 = 0;
 	win2 = 0;
 	draw = 0;
-	console.log("R vs Q");
-	AIstart(1);
 }
 
 let Qcicle = 0;
@@ -47,26 +52,24 @@ function AIstart(h) {
 	console.log(win1);
 	console.log(win2);
 	console.log(draw);
+	pointClear();
 }
 
 let endFlg = false;
 
 function AIGame(h) {
-	let ep = (h == -1) ? epsilon : 0;
 	let Qnum = 0; //0 maru 1 batsu
 	Qcicle++;
+	endFlg = false;
 	while (!endFlg) {
 		Qposi[Qnum] = returnQ();
-		var r = putStonePic(Qnum, ep, h);
+		var r = putStonePic(Qnum, h);
 		if (h == -1) {
 			NN[Qnum] = returnQ();
-			gammaMem[Qnum] = gamma * maxValue(Qnum, NN[Qnum]);
-			Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] = (1 - alpha) * Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]] + alpha * (r + gammaMem[Qnum]);
+			QCalculation(Qnum, r);
 		}
-
 		Qnum = (Qnum == 0) ? 1 : 0;
 	}
-	endFlg = false;
 }
 
 function returnQ() {
@@ -77,31 +80,29 @@ function returnQ() {
 	return r;
 }
 
-function putStonePic(q, ep, h) {
+function putStonePic(q, h) {
 	let returnScore = 0;
 	let spaceArr = searchStone();
 	let i;
 	const r = Math.floor(Math.random() * (spaceArr.length));
 	const e = epsilonGreedy(spaceArr, q);
 	if (h == -1) {
-		i = (Math.random() < ep) ? spaceArr[r] : e;
+		i = (Math.random() < epsilon) ? spaceArr[r] : e;
 	} else {
 		i = (q == h) ? e : spaceArr[r];
 	}
 	QNextPosi[q] = i;
 	const flg = putStone(i, q);
-	if (endFlg) {
+	if (endFlg && h == -1) {
 		returnScore = (flg) ? 0 : score;
-		if (h == -1) {
-			const p = (q == 0) ? 1 : 0;
-			Q[p][Qposi[p]][QNextPosi[p]] = (1 - alpha) * Q[p][Qposi[p]][QNextPosi[p]] + alpha * (-returnScore + gammaMem[p]);
-		}
+		const p = (q == 0) ? 1 : 0;
+		QCalculation(p, -returnScore);
 
-		let s = "";
-		for (var k = 0; k < 9; k++) {
-			s += board[k];
-		}
-		if (flg) q = 2;
+		// let s = "";
+		// for (var k = 0; k < 9; k++) {
+		// 	s += board[k];
+		// }
+		// if (flg) q = 2;
 		// console.log(s, q);
 	}
 	return returnScore;
@@ -219,6 +220,11 @@ function maxValue(q, n) {
 		}
 	}
 	return max;
+}
+
+function QCalculation(p, score) {
+	gammaMem[p] = gamma * maxValue(p, NN[p]);
+	Q[p][Qposi[p]][QNextPosi[p]] = (1 - alpha) * Q[p][Qposi[p]][QNextPosi[p]] + alpha * (score + gammaMem[p]);
 }
 
 Main();
