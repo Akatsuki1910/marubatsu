@@ -1,6 +1,5 @@
 import java.util.*;
 
-
 public class Main {
 	public static ArrayList < Integer > boardlist = new ArrayList < Integer > ();
 	public static int[] board = new int[9];
@@ -71,9 +70,9 @@ public class Main {
 
 		}
 
-		System.out.println("TOTAL:" + episode);
-		System.out.println("owin:" + Owin);
-		System.out.println("xwin:" + Xwin);
+		System.out.println("ep:" + episode);
+		System.out.println("win:1" + Owin);
+		System.out.println("win:2" + Xwin);
 		System.out.println("draw:" + draw);
 	}
 
