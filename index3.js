@@ -1,7 +1,7 @@
 const alpha = 0.04;
 const gamma = 0.9;
 const epsilon = 0.04;
-const episode = 10000;
+const episode = 10;
 const score = 1;
 
 let win1 = 0;
@@ -31,14 +31,6 @@ function AIstart(mode) {
 	for (var i = 0; i < episode; i++) {
 		boardReset();
 		AIGame(mode);
-		// if(i%1000==0){
-		// 	console.log('\x1b[36m%s\x1b[0m', win1);
-		// 	console.log('\x1b[33m%s\x1b[0m', win2);
-		// 	console.log('\x1b[37m%s\x1b[0m', draw);
-		// 	win1=0;
-		// 	win2=0;
-		// 	draw=0;
-		// }
 	}
 	console.log('\x1b[36m%s\x1b[0m', win1);
 	console.log('\x1b[33m%s\x1b[0m', win2);
@@ -65,7 +57,6 @@ function AIGame(mode) {
 		if (endGame(Qnum)) {
 			break;
 		}
-		// console.log(eg[Qnum]);
 		Qmem[Qnum] = Q[Qnum][state[Qnum]][eg[Qnum]];
 		QCalculation(Qnum, 0);
 		Qnum = (Qnum == 0) ? 1 : 0;
@@ -83,11 +74,9 @@ function AIGame(mode) {
 		}
 	}
 	QCalculation(Qnum, s);
-	// console.log(Q[Qnum][state[Qnum]][eg[Qnum]],Qnum);
 	Qnum = (Qnum == 0) ? 1 : 0;
 	Q[Qnum][state[Qnum]][eg[Qnum]] = Qmem[Qnum];
 	QCalculation(Qnum, -s);
-	// console.log(Q[Qnum][state[Qnum]][eg[Qnum]],Qnum);
 }
 
 function boardReset() {
@@ -107,9 +96,12 @@ function getState() {
 
 function epsilonGreedy(q, mode) {
 	const ssArr = searchStone();
+	// ssArr.forEach(element => {
+	// 	console.log(element);
+	// });console.log("-------");
 	const r = Math.floor(Math.random() * (ssArr.length));
 
-	let e = 0;
+	let e;
 	let max = -score * 100;
 	for (let i = 0; i < ssArr.length; i++) {
 		if (max < Q[q][state[q]][ssArr[i]]) {
