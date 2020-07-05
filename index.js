@@ -7,7 +7,7 @@ let gammaMem = [0, 0];
 let NN = [0, 0];
 let Qmem = [0, 0];
 
-const alpha = 0.5;
+const alpha = 0.3;
 const gamma = 0.9;
 const epsilon = 0.1;
 const episode = 100000;
@@ -34,10 +34,10 @@ function Main() {
 	console.log("alpha" + alpha + " gamma" + gamma + " epsilon" + epsilon);
 	console.log("Q vs Q");
 	AIstart(-1);
-	console.log("Q vs R");
-	AIstart(0);
-	console.log("R vs Q");
-	AIstart(1);
+	// console.log("Q vs R");
+	// AIstart(0);
+	// console.log("R vs Q");
+	// AIstart(1);
 }
 
 function pointClear() {
@@ -54,11 +54,11 @@ function AIstart(h) {
 	for (let i = 0; i < episode; i++) {
 		AIGame(h);
 		boardReset();
-		if (i % (episode / 1000) == 0) {
+		if (i % (episode / 100) == 0) {
 			let jd = {
-				1: win1,
-				2: win2,
-				3: draw
+				1: win1 / Qcicle,
+				2: win2 / Qcicle,
+				3: draw / Qcicle
 			};
 			jsonData.push(jd);
 		}
@@ -111,8 +111,8 @@ function putStonePic(q, h) {
 		i = (q == h) ? e : spaceArr[r];
 	}
 	QNextPosi[q] = i;
-	const dFlg = putStone(i, q);
-	if (endFlg && h == -1) {
+	let dFlg = putStone(i, q);
+	if (endFlg && (h == -1)) {
 		returnScore = (dFlg) ? 0 : score;
 		const p = (q == 0) ? 1 : 0;
 		Q[p][Qposi[p]][QNextPosi[p]] = Qmem[p];
@@ -154,7 +154,7 @@ function epsilonGreedy(arr, q) {
 }
 
 function putStone(x, q) {
-	board[x] = (q + 1);
+	board[x] = q + 1;
 
 	if (board[0] == board[1] && board[0] == board[2] && board[0] != 0) endFlg = true;
 	if (board[3] == board[4] && board[3] == board[5] && board[3] != 0) endFlg = true;
@@ -173,12 +173,13 @@ function putStone(x, q) {
 				break;
 			}
 		}
-		if (drawFlg) endFlg = true;
+		if (drawFlg) {
+			endFlg = true;
+		}
 	} else {
 		drawFlg = false;
 	}
 
-	// if (episode - 100000 <= Qcicle) {
 	if (endFlg) {
 		if (drawFlg) {
 			draw++;
@@ -190,7 +191,7 @@ function putStone(x, q) {
 			}
 		}
 	}
-	// }
+
 	return drawFlg;
 }
 
@@ -203,7 +204,7 @@ function boardReset() {
 function maxValue(q, n) {
 	let max = -score * 100;
 	for (let i = 0; i < Q[q][n].length; i++) {
-		if (Q[q][n][i] >= max) {
+		if (Q[q][n][i] > max) {
 			max = Q[q][n][i];
 		}
 	}

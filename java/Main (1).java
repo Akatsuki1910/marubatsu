@@ -35,6 +35,20 @@ public class Main {
 		int XwinR = 0;
 		int drawR = 0;
 
+		int[] OwinToatl = new int[100];
+		int[] XwinToatl = new int[100];
+		int[] drawToatl = new int[100];
+		double[] Oeff = new double[100];
+		double[] Xeff = new double[100];
+
+
+		int a = 0;
+
+		double a1cnt = 0;
+		double a2cnt = 0;
+		double r1cnt = 0;
+		double r2cnt = 0;
+
 		int episode = 1;
 		ArrayList < Integer > boardlist = new ArrayList < Integer > ();
 
@@ -63,7 +77,7 @@ public class Main {
 					//int p1 = scan.nextInt();	//0～8
 					s1 = getState(board);
 					a1 = Egreedy(s1, Q1, board, boardlist, episode);
-
+					a1cnt++;
 					board[a1] = "〇";
 					//OutputBoard(board);
 
@@ -86,6 +100,7 @@ public class Main {
 					//int p2 = scan.nextInt();	//0～8
 					s2 = getState(board);
 					a2 = Egreedy(s2, Q2, board, boardlist, episode);
+					a2cnt++;
 					if (episode > 100001) {
 						a2 = boardlist.get(rand.nextInt(boardlist.size()));
 					}
@@ -115,7 +130,7 @@ public class Main {
 					if (episode > 100000) {
 						OwinR++;
 						//OutputBoard(board);
-					} else if (episode > 90000) {
+					} else if (episode > 90001) {
 						Owin++;
 						//System.out.println("〇 win!!");
 					}
@@ -123,10 +138,11 @@ public class Main {
 				} else if (judgeO(board) == false && judgeX(board) == true) {
 					r1 = -1;
 					r2 = 1;
+
 					if (episode > 100000) {
 						XwinR++;
 						//OutputBoard(board);
-					} else if (episode > 90000) {
+					} else if (episode > 90001) {
 						Xwin++;
 						//System.out.println("× win!!");
 					}
@@ -137,11 +153,14 @@ public class Main {
 					if (episode > 100000) {
 						drawR++;
 						//OutputBoard(board);
-					} else if (episode > 90000) {
+					} else if (episode > 90001) {
 						draw++;
 						//System.out.println("DRAW game");
 					}
 				}
+				r1cnt += r1;
+				r2cnt += r2;
+
 				if (episode < 100000) {
 					Q1[s1][a1] = (1 - alpha) * Q1[s1][a1] + alpha * (r1 + gamma * MaxValue(nexts1, Q1));
 					Q2[s2][a2] = (1 - alpha) * Q2[s2][a2] + alpha * (r2 + gamma * MaxValue(nexts2, Q2));
@@ -167,6 +186,29 @@ public class Main {
 		System.out.println("〇win：" + OwinR);
 		System.out.println("×win：" + XwinR);
 		System.out.println("draw：" + drawR);
+
+		/*
+        System.out.println("Owin");
+        for(int i = 0; i < OwinToatl.length; i++) {
+        	System.out.println(OwinToatl[i]);
+        }
+        System.out.println("Xwin");
+        for(int i = 0; i < XwinToatl.length; i++) {
+        	System.out.println(XwinToatl[i]);
+        }
+        System.out.println("draw");
+        for(int i = 0; i < drawToatl.length; i++) {
+        	System.out.println(drawToatl[i]);
+        }
+        System.out.println("Oeff");
+        for(int i = 0; i < Oeff.length; i++) {
+        	System.out.println(Oeff[i]);
+        }
+        System.out.println("Xeff");
+        for(int i = 0; i < Xeff.length; i++) {
+        	System.out.println(Xeff[i]);
+        }
+		*/
 
 		/*
 		for(int i = 0; i < 19683; i++) {
