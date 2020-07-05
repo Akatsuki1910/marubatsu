@@ -43,8 +43,8 @@ public class Main {
 					break;
 				}
 
-				Q[0][s[0]][a[0]] = (1 - alpha) * Q[0][s[0]][a[0]] + alpha * (r[0] + gamma * MaxValue(next[0],0));
-				Q[1][s[1]][a[1]] = (1 - alpha) * Q[1][s[1]][a[1]] + alpha * (r[1] + gamma * MaxValue(next[1],1));
+				QCalculation(0,r[0]);
+				QCalculation(1,r[1]);
 
 			}
 			if (endInt == 1) {
@@ -61,8 +61,8 @@ public class Main {
 				draw++;
 			}
 
-			Q[0][s[0]][a[0]] = (1 - alpha) * Q[0][s[0]][a[0]] + alpha * (r[0] + gamma * MaxValue(next[0],0));
-			Q[1][s[1]][a[1]] = (1 - alpha) * Q[1][s[1]][a[1]] + alpha * (r[1] + gamma * MaxValue(next[1],1));
+			QCalculation(0,r[0]);
+			QCalculation(1,r[1]);
 
 			if (episode % 10000 == 0) {
 				System.out.println(episode);
@@ -74,6 +74,10 @@ public class Main {
 		System.out.println("owin:" + Owin);
 		System.out.println("xwin:" + Xwin);
 		System.out.println("draw:" + draw);
+	}
+
+	private static void QCalculation(int q,int i) {
+		Q[q][s[q]][a[q]] = (1 - alpha) * Q[q][s[q]][a[q]] + alpha * (i + gamma * MaxValue(next[q],q));
 	}
 
 	private static void boardClear() {

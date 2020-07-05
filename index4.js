@@ -62,8 +62,8 @@ function Main(m) {
 			}
 
 			if (mode == -1 && q == 1) {
-				QCalculation(0, s1);
-				QCalculation(1, s2);
+				QCalculation(0, 0);
+				QCalculation(1, 0);
 			}
 			q = (q == 0) ? 1 : 0;
 		}

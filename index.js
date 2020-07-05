@@ -62,8 +62,8 @@ function Main(m) {
 			}
 
 			if (mode == -1 && q == 1) {
-				QCalculation(0, s1);
-				QCalculation(1, s2);
+				QCalculation1(0, 0);//why!?
+				QCalculation2(1, 0);//why!?
 			}
 			q = (q == 0) ? 1 : 0;
 		}
@@ -80,12 +80,14 @@ function Main(m) {
 				break;
 			case 3:
 				draw++;
+				s1 = 0;
+				s2 = 0;
 				break;
 		}
 
 		if (mode == -1) {
-			QCalculation(0, s1);
-			QCalculation(1, s2);
+			QCalculation1(0, s1);
+			QCalculation2(1, s2);
 		}
 
 		rAll[0] += s1;
@@ -110,8 +112,12 @@ function Main(m) {
 	draw = 0;
 }
 
-function QCalculation(q, i) {
+function QCalculation1(q, i) {
 	Q[q][s[q]][a[q]] = (1 - alpha) * Q[q][s[q]][a[q]] + alpha * (i + gamma * maxValue(q, next[q]));
+}
+
+function QCalculation2(q, i) {
+	Q[q][s[q]][a[q]] = (1 - alpha) * Q[q][s[q]][a[q]] + alpha * (i + gamma * minValue(q, next[q]));
 }
 
 function maxValue(q, n) {
@@ -123,6 +129,17 @@ function maxValue(q, n) {
 		}
 	}
 	return max;
+}
+
+function minValue(q, n) {
+	var min = 100 * score;
+	for (var i = 0; i < 9; i++) {
+		var r = Q[q][n][i];
+		if (min > r) {
+			min = r;
+		}
+	}
+	return min;
 }
 
 function endGame(q) {
