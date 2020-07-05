@@ -1,23 +1,19 @@
 var fs = require('fs');
 var jsonData = [];
 
-let Qposi = [0, 0];
-let QNextPosi = [0, 0];
-let gammaMem = [0, 0];
-let NN = [0, 0];
-let Qmem = [0, 0];
-
-const alpha = 0.3;
-const gamma = 0.9;
-const epsilon = 0.1;
+var s = [];
+var next = [];
+var a = [];
+var rAll = [0, 0];
+var alpha = 0.04;
+var gamma = 0.9;
+var epsilon = 0.04;
+var win1 = 0;
+var win2 = 0;
+var draw = 0;
 const episode = 100000;
 const score = 1;
 
-let win1 = 0;
-let win2 = 0;
-let draw = 0;
-
-let board = [];
 let Q = [];
 for (var qN = 0; qN < 2; qN++) {
 	Q[qN] = [];
@@ -29,36 +25,78 @@ for (var qN = 0; qN < 2; qN++) {
 	}
 }
 
-function Main() {
-	console.log("episode:" + episode);
-	console.log("alpha" + alpha + " gamma" + gamma + " epsilon" + epsilon);
-	console.log("Q vs Q");
-	AIstart(-1);
-	// console.log("Q vs R");
-	// AIstart(0);
-	// console.log("R vs Q");
-	// AIstart(1);
-}
+let board = [];
+let boardlist = [];
+let ep = 0;
+let QCicle = 0;
+let mode;
+/*
+	-1 Q vs Q
+	0  Q vs R
+	1  R vs Q
+*/
 
-function pointClear() {
-	win1 = 0;
-	win2 = 0;
-	draw = 0;
-}
+function Main(m) {
+	mode = m;
+	console.log("episode" + episode);
+	console.log("alpha" + alpha);
+	console.log("gamma" + gamma);
+	console.log("epsilon" + epsilon);
+	var s1 = 0;
+	var s2 = 0;
+	for (var i = 0; i < episode; i++) {
+		QCicle = i;
+		boardClear();
+		var end = 0;
+		ep = epsilon;
+		var q = 0;
+		while (true) {
+			s[q] = getState();
+			a[q] = epsilonGreedy(q);
+			board[a[q]] = q + 1;
+			boardlist.splice(boardlist.indexOf(a[q]), 1);
+			next[q] = getState();
+			end = endGame(q);
+			if (end != 0) {
+				break;
+			}
 
-let Qcicle = 0;
+			if (mode == -1 && q == 1) {
+				QCalculation(0, s1);
+				QCalculation(1, s2);
+			}
+			q = (q == 0) ? 1 : 0;
+		}
+		switch (end) {
+			case 1:
+				win1++;
+				s1 = score;
+				s2 = -score;
+				break;
+			case 2:
+				win2++;
+				s1 = -score;
+				s2 = score;
+				break;
+			case 3:
+				draw++;
+				break;
+		}
 
-function AIstart(h) {
-	Qcicle = 0;
-	boardReset();
-	for (let i = 0; i < episode; i++) {
-		AIGame(h);
-		boardReset();
+		if (mode == -1) {
+			QCalculation(0, s1);
+			QCalculation(1, s2);
+		}
+
+		rAll[0] += s1;
+		rAll[1] += s2;
 		if (i % (episode / 100) == 0) {
 			let jd = {
-				1: win1 / Qcicle,
-				2: win2 / Qcicle,
-				3: draw / Qcicle
+				// 1: win1 / QCicle,
+				// 2: win2 / QCicle,
+				// 3: draw / QCicle
+				1: rAll[0] / QCicle,
+				2: rAll[1] / QCicle,
 			};
 			jsonData.push(jd);
 		}
@@ -67,153 +105,85 @@ function AIstart(h) {
 	console.log('\x1b[36m%s\x1b[0m', win1);
 	console.log('\x1b[33m%s\x1b[0m', win2);
 	console.log('\x1b[37m%s\x1b[0m', draw);
-	// console.log('\x1b[36m%s\x1b[0m',win1/episode);
-	// console.log('\x1b[33m%s\x1b[0m',win2/episode);
-	// console.log('\x1b[37m%s\x1b[0m',draw/episode);
-	pointClear();
+	win1 = 0;
+	win2 = 0;
+	draw = 0;
 }
 
-let endFlg;
-
-function AIGame(h) {
-	let Qnum = 0; //0 maru 1 batsu
-	Qcicle++;
-	endFlg = false;
-	while (!endFlg) {
-		Qposi[Qnum] = returnQ();
-		var r = putStonePic(Qnum, h);
-		if (h == -1) {
-			NN[Qnum] = returnQ();
-			Qmem[Qnum] = Q[Qnum][Qposi[Qnum]][QNextPosi[Qnum]];
-			QCalculation(Qnum, r);
-		}
-		Qnum = (Qnum == 0) ? 1 : 0;
-	}
-}
-
-function returnQ() {
-	let r = 0;
-	for (let i = 0; i < 9; i++) {
-		r += Math.pow(3, i) * Number(board[i]);
-	}
-	return r;
-}
-
-function putStonePic(q, h) {
-	let returnScore = 0;
-	let spaceArr = searchStone();
-	let i;
-	const r = Math.floor(Math.random() * (spaceArr.length));
-	const e = epsilonGreedy(spaceArr, q);
-	if (h == -1) {
-		i = (Math.random() < epsilon) ? spaceArr[r] : e;
-	} else {
-		i = (q == h) ? e : spaceArr[r];
-	}
-	QNextPosi[q] = i;
-	let dFlg = putStone(i, q);
-	if (endFlg && (h == -1)) {
-		returnScore = (dFlg) ? 0 : score;
-		const p = (q == 0) ? 1 : 0;
-		Q[p][Qposi[p]][QNextPosi[p]] = Qmem[p];
-		QCalculation(p, -returnScore);
-
-		// let s = "";
-		// for (var k = 0; k < 9; k++) {
-		// 	s += board[k];
-		// 	if((k+1)%3==0){
-		// 		s+="\n";
-		// 	}
-		// }
-		// if (dFlg) q = 2;
-		// console.log(s, q);
-	}
-	return returnScore;
-}
-
-function searchStone() {
-	let rArr = [];
-	for (let i = 0; i < 9; i++) {
-		if (board[i] == 0) {
-			rArr.push(i);
-		}
-	}
-	return rArr;
-}
-
-function epsilonGreedy(arr, q) {
-	let r = 0;
-	let max = -score * 100;
-	for (let i = 0; i < arr.length; i++) {
-		if (max < Q[q][Qposi[q]][arr[i]]) {
-			r = arr[i];
-			max = Q[q][Qposi[q]][arr[i]];
-		}
-	}
-	return r;
-}
-
-function putStone(x, q) {
-	board[x] = q + 1;
-
-	if (board[0] == board[1] && board[0] == board[2] && board[0] != 0) endFlg = true;
-	if (board[3] == board[4] && board[3] == board[5] && board[3] != 0) endFlg = true;
-	if (board[6] == board[7] && board[6] == board[8] && board[6] != 0) endFlg = true;
-	if (board[0] == board[3] && board[0] == board[6] && board[0] != 0) endFlg = true;
-	if (board[1] == board[4] && board[1] == board[7] && board[1] != 0) endFlg = true;
-	if (board[2] == board[5] && board[2] == board[8] && board[2] != 0) endFlg = true;
-	if (board[0] == board[4] && board[0] == board[8] && board[0] != 0) endFlg = true;
-	if (board[2] == board[4] && board[2] == board[6] && board[2] != 0) endFlg = true;
-
-	let drawFlg = true;
-	if (!endFlg) {
-		for (let i = 0; i < 9; i++) {
-			if (0 == board[i]) {
-				drawFlg = false;
-				break;
-			}
-		}
-		if (drawFlg) {
-			endFlg = true;
-		}
-	} else {
-		drawFlg = false;
-	}
-
-	if (endFlg) {
-		if (drawFlg) {
-			draw++;
-		} else {
-			if (q == 0) {
-				win1++;
-			} else {
-				win2++;
-			}
-		}
-	}
-
-	return drawFlg;
-}
-
-function boardReset() {
-	for (var i = 0; i < 9; i++) {
-		board[i] = 0;
-	}
+function QCalculation(q, i) {
+	Q[q][s[q]][a[q]] = (1 - alpha) * Q[q][s[q]][a[q]] + alpha * (i + gamma * maxValue(q, next[q]));
 }
 
 function maxValue(q, n) {
-	let max = -score * 100;
-	for (let i = 0; i < Q[q][n].length; i++) {
-		if (Q[q][n][i] > max) {
-			max = Q[q][n][i];
+	var max = -100 * score;
+	for (var i = 0; i < 9; i++) {
+		var r = Q[q][n][i];
+		if (max < r) {
+			max = r;
 		}
 	}
 	return max;
 }
 
-function QCalculation(p, score) {
-	gammaMem[p] = gamma * maxValue(p, NN[p]);
-	Q[p][Qposi[p]][QNextPosi[p]] = (1 - alpha) * Q[p][Qposi[p]][QNextPosi[p]] + alpha * (score + gammaMem[p]);
+function endGame(q) {
+	q++;
+	var endFlg = 0;
+	if (board[0] == q && board[1] == q && board[2] == q) endFlg = q;
+	if (board[3] == q && board[4] == q && board[5] == q) endFlg = q;
+	if (board[6] == q && board[7] == q && board[8] == q) endFlg = q;
+	if (board[0] == q && board[3] == q && board[6] == q) endFlg = q;
+	if (board[1] == q && board[4] == q && board[7] == q) endFlg = q;
+	if (board[2] == q && board[5] == q && board[8] == q) endFlg = q;
+	if (board[0] == q && board[4] == q && board[8] == q) endFlg = q;
+	if (board[2] == q && board[4] == q && board[6] == q) endFlg = q;
+
+	if (endFlg == 0) {
+		endFlg = 3;
+		for (var i = 0; i < board.length; i++) {
+			if (board[i] == 0) {
+				endFlg = 0;
+				break;
+			}
+		}
+	}
+
+	return endFlg;
 }
 
-Main();
+function epsilonGreedy(q) {
+	var r;
+	// ep = epsilon * (episode - QCicle/2) / episode;
+	if (mode != -1) {
+		ep = 0;
+	}
+	if (Math.random() < ep || (mode != -1 && q != mode)) {
+		r = boardlist[Math.floor(Math.random() * boardlist.length)];
+	} else {
+		var max = -100 * score;
+		for (var i = 0; i < boardlist.length; i++) {
+			if (max < Q[q][s[q]][boardlist[i]]) {
+				max = Q[q][s[q]][boardlist[i]];
+				r = boardlist[i];
+			}
+		}
+	}
+
+	return r;
+}
+
+function getState() {
+	var r = 0;
+	for (var i = 0; i < 9; i++) {
+		r += Math.pow(3, i) * board[i];
+	}
+	return r;
+}
+
+function boardClear() {
+	for (var i = 0; i < 9; i++) {
+		board[i] = 0;
+		boardlist[i] = i;
+	}
+}
+
+Main(-1);

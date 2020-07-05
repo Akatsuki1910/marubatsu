@@ -1,5 +1,6 @@
 import java.util.*;
 
+
 public class Main {
 	public static ArrayList < Integer > boardlist = new ArrayList < Integer > ();
 	public static int[] board = new int[9];
@@ -62,17 +63,16 @@ public class Main {
 
 			Q[0][s[0]][a[0]] = (1 - alpha) * Q[0][s[0]][a[0]] + alpha * (r[0] + gamma * MaxValue(next[0],0));
 			Q[1][s[1]][a[1]] = (1 - alpha) * Q[1][s[1]][a[1]] + alpha * (r[1] + gamma * MaxValue(next[1],1));
-			r[0]=0;
-			r[1]=0;
+
 			if (episode % 10000 == 0) {
 				System.out.println(episode);
 			}
 
 		}
 
-		System.out.println("ep:" + episode);
-		System.out.println("win:1" + Owin);
-		System.out.println("win:2" + Xwin);
+		System.out.println("TOTAL:" + episode);
+		System.out.println("owin:" + Owin);
+		System.out.println("xwin:" + Xwin);
 		System.out.println("draw:" + draw);
 	}
 

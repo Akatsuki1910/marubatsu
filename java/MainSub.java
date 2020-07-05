@@ -1,11 +1,8 @@
-package ox_game_test;
-
-
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Main {
+public class MainSub {
 
 	public static void main(String[] args) {
 
@@ -31,30 +28,12 @@ public class Main {
 		int Xwin = 0;
 		int draw = 0;
 
-		int OwinR = 0;
-		int XwinR = 0;
-		int drawR = 0;
-
-		int[] OwinToatl = new int[100];
-		int[] XwinToatl = new int[100];
-		int[] drawToatl = new int[100];
-		double[] Oeff = new double[100];
-		double[] Xeff = new double[100];
-
-
-		int a = 0;
-
-		double a1cnt = 0;
-		double a2cnt = 0;
-		double r1cnt = 0;
-		double r2cnt = 0;
-
 		int episode = 1;
 		ArrayList < Integer > boardlist = new ArrayList < Integer > ();
 
 		for (int count = 0; count < 1; count++) {
-			double[][] Q1 = new double[19683][9]; //player1 Qテーブル
-			double[][] Q2 = new double[19683][9]; //player2 Qテーブル
+			double[][] Q1 = new double[19683][9];
+			double[][] Q2 = new double[19683][9];
 
 			for (episode = 1; episode < 110001; episode++) {
 
@@ -65,24 +44,12 @@ public class Main {
 					board[i] = "＿";
 					boardlist.add(i);
 				}
-
-				//System.out.println("First Board");
-				//OutputBoard(board);
-
 				while (true) {
-
 					inputBoard(boardlist, board);
-
-					//System.out.println("Input 〇 number 0～8");
-					//int p1 = scan.nextInt();	//0～8
 					s1 = getState(board);
 					a1 = Egreedy(s1, Q1, board, boardlist, episode);
-					a1cnt++;
 					board[a1] = "〇";
-					//OutputBoard(board);
-
 					nexts1 = getState(board);
-
 					if (judgeO(board)) {
 						break;
 					}
@@ -92,23 +59,11 @@ public class Main {
 					if (episode < 100000) {
 						Q1[s1][a1] = (1 - alpha) * Q1[s1][a1] + alpha * (r1 + gamma * MaxValue(nexts1, Q1));
 					}
-
-
 					inputBoard(boardlist, board);
-
-					//System.out.println("Input × number 0～8");
-					//int p2 = scan.nextInt();	//0～8
 					s2 = getState(board);
 					a2 = Egreedy(s2, Q2, board, boardlist, episode);
-					a2cnt++;
-					if (episode > 100001) {
-						a2 = boardlist.get(rand.nextInt(boardlist.size()));
-					}
 					board[a2] = "×";
-					//OutputBoard(board);
-
 					nexts2 = getState(board);
-
 					if (judgeX(board)) {
 						break;
 					}
@@ -118,110 +73,36 @@ public class Main {
 					if (episode < 100000) {
 						Q2[s2][a2] = (1 - alpha) * Q2[s2][a2] + alpha * (r2 + gamma * MaxValue(nexts2, Q2));
 					}
-
 				}
-
-				//System.out.println("End Board");
-				//OutputBoard(board);
 
 				if (judgeO(board) == true && judgeX(board) == false) {
 					r1 = 1;
 					r2 = -1;
-					if (episode > 100000) {
-						OwinR++;
-						//OutputBoard(board);
-					} else if (episode > 90001) {
 						Owin++;
-						//System.out.println("〇 win!!");
-					}
 
 				} else if (judgeO(board) == false && judgeX(board) == true) {
 					r1 = -1;
 					r2 = 1;
-
-					if (episode > 100000) {
-						XwinR++;
-						//OutputBoard(board);
-					} else if (episode > 90001) {
 						Xwin++;
-						//System.out.println("× win!!");
-					}
 
 				} else if (judgeO(board) == false && judgeX(board) == false) {
 					r1 = 0;
 					r2 = 0;
-					if (episode > 100000) {
-						drawR++;
-						//OutputBoard(board);
-					} else if (episode > 90001) {
 						draw++;
-						//System.out.println("DRAW game");
-					}
 				}
-				r1cnt += r1;
-				r2cnt += r2;
-
-				if (episode < 100000) {
 					Q1[s1][a1] = (1 - alpha) * Q1[s1][a1] + alpha * (r1 + gamma * MaxValue(nexts1, Q1));
 					Q2[s2][a2] = (1 - alpha) * Q2[s2][a2] + alpha * (r2 + gamma * MaxValue(nexts2, Q2));
-				}
 
 				if (episode % 10000 == 0) {
 					System.out.println(episode);
 				}
-
-
-
 			}
 		}
 
-
-
-		System.out.println("TOTAL：" + (episode - 100001));
+		System.out.println("TOTAL：" + episode);
 		System.out.println("〇win：" + Owin);
 		System.out.println("×win：" + Xwin);
 		System.out.println("draw：" + draw);
-
-		System.out.println("TOTALrandom：" + (episode - 100001));
-		System.out.println("〇win：" + OwinR);
-		System.out.println("×win：" + XwinR);
-		System.out.println("draw：" + drawR);
-
-		/*
-        System.out.println("Owin");
-        for(int i = 0; i < OwinToatl.length; i++) {
-        	System.out.println(OwinToatl[i]);
-        }
-        System.out.println("Xwin");
-        for(int i = 0; i < XwinToatl.length; i++) {
-        	System.out.println(XwinToatl[i]);
-        }
-        System.out.println("draw");
-        for(int i = 0; i < drawToatl.length; i++) {
-        	System.out.println(drawToatl[i]);
-        }
-        System.out.println("Oeff");
-        for(int i = 0; i < Oeff.length; i++) {
-        	System.out.println(Oeff[i]);
-        }
-        System.out.println("Xeff");
-        for(int i = 0; i < Xeff.length; i++) {
-        	System.out.println(Xeff[i]);
-        }
-		*/
-
-		/*
-		for(int i = 0; i < 19683; i++) {
-			for(int j = 0; j < 9; j++) {
-				if(Q1[i][j] > 0) {
-					System.out.println("satate1:"+i+"act1"+j+"Q1:"+ Q1[i][j]);
-				}
-				if(Q2[i][j] > 0) {
-					System.out.println("satate2:"+i+"act2"+j+"Q2:"+ Q2[i][j]);
-				}
-			}
-		}
-		*/
 	}
 
 
@@ -346,8 +227,4 @@ public class Main {
 
 		return max;
 	}
-
-
-
-
 }

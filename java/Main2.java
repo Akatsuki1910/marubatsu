@@ -1,11 +1,8 @@
-package ox_game_test;
-
-
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Main {
+public class Main2 {
 
 	public static void main(String[] args) {
 

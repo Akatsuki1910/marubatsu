@@ -5,14 +5,14 @@ var s = [];
 var next = [];
 var a = [];
 var rAll = [0, 0];
-var alpha = 0.5;
-var gamma = 0.99;
-var epsilon = 0.5;
+var alpha = 0.04;
+var gamma = 0.9;
+var epsilon = 0.04;
 var win1 = 0;
 var win2 = 0;
 var draw = 0;
-const episode = 30000;
-const score = 100;
+const episode = 100000;
+const score = 1;
 
 let Q = [];
 for (var qN = 0; qN < 2; qN++) {
@@ -46,8 +46,6 @@ function Main(m) {
 	var s2 = 0;
 	for (var i = 0; i < episode; i++) {
 		QCicle = i;
-		s1 = 0;
-		s2 = 0;
 		boardClear();
 		var end = 0;
 		ep = epsilon;
@@ -64,8 +62,8 @@ function Main(m) {
 			}
 
 			if (mode == -1 && q == 1) {
-				QCalculation(0, 0, 1);
-				QCalculation(1, 0, 1);
+				QCalculation(0, s1);
+				QCalculation(1, s2);
 			}
 			q = (q == 0) ? 1 : 0;
 		}
@@ -86,19 +84,19 @@ function Main(m) {
 		}
 
 		if (mode == -1) {
-			QCalculation(0, s1, 0);
-			QCalculation(1, s2, 0);
+			QCalculation(0, s1);
+			QCalculation(1, s2);
 		}
 
 		rAll[0] += s1;
 		rAll[1] += s2;
 		if (i % (episode / 100) == 0) {
 			let jd = {
-				1: win1 / QCicle,
-				2: win2 / QCicle,
-				3: draw / QCicle
-				// 1: rAll[0] / QCicle,
-				// 2: rAll[1] / QCicle,
+				// 1: win1 / QCicle,
+				// 2: win2 / QCicle,
+				// 3: draw / QCicle
+				1: rAll[0] / QCicle,
+				2: rAll[1] / QCicle,
 			};
 			jsonData.push(jd);
 		}
@@ -112,9 +110,8 @@ function Main(m) {
 	draw = 0;
 }
 
-function QCalculation(q, i, g) {
-	var ga = g * gamma;
-	Q[q][s[q]][a[q]] = Q[q][s[q]][a[q]] + alpha * (i + ga * maxValue(q, next[q]) - Q[q][s[q]][a[q]]);
+function QCalculation(q, i) {
+	Q[q][s[q]][a[q]] = (1 - alpha) * Q[q][s[q]][a[q]] + alpha * (i + gamma * maxValue(q, next[q]));
 }
 
 function maxValue(q, n) {
@@ -190,9 +187,3 @@ function boardClear() {
 }
 
 Main(-1);
-// Main(0);
-// Main(1);
-// Main(-1);
-// Main(-1);
-// Main(-1);
-// Main(-1);
