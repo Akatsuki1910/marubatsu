@@ -45,6 +45,8 @@ function Main(m) {
 	var s1 = 0;
 	var s2 = 0;
 	for (var i = 0; i < episode; i++) {
+		s1 = 0;
+		s2 = 0;
 		QCicle = i;
 		boardClear();
 		var end = 0;
@@ -61,9 +63,11 @@ function Main(m) {
 				break;
 			}
 
-			if (mode == -1 && q == 1) {
-				QCalculation1(0, 0);//why!?
-				QCalculation2(1, 0);//why!?
+			if (q == 1) {
+				if (mode == -1) {
+					QCalculation(0, s1 * 0.001);
+					QCalculation(1, s2 * 0.001);
+				}
 			}
 			q = (q == 0) ? 1 : 0;
 		}
@@ -80,25 +84,25 @@ function Main(m) {
 				break;
 			case 3:
 				draw++;
-				s1 = 0;
-				s2 = 0;
+				s1 = 0; //score/10;
+				s2 = 0; //score/10;
 				break;
 		}
 
 		if (mode == -1) {
-			QCalculation1(0, s1);
-			QCalculation2(1, s2);
+			QCalculation(0, s1);
+			QCalculation(1, s2);
 		}
 
 		rAll[0] += s1;
 		rAll[1] += s2;
-		if (i % (episode / 100) == 0) {
+		if ((i + 1) % (episode / 100) == 0 && mode != -1) {
 			let jd = {
-				// 1: win1 / QCicle,
-				// 2: win2 / QCicle,
-				// 3: draw / QCicle
-				1: rAll[0] / QCicle,
-				2: rAll[1] / QCicle,
+				1: win1 / QCicle,
+				2: win2 / QCicle,
+				3: draw / QCicle,
+				// 1: rAll[0] / QCicle,
+				// 2: rAll[1] / QCicle,
 			};
 			jsonData.push(jd);
 		}
@@ -112,13 +116,10 @@ function Main(m) {
 	draw = 0;
 }
 
-function QCalculation1(q, i) {
+function QCalculation(q, i) {
 	Q[q][s[q]][a[q]] = (1 - alpha) * Q[q][s[q]][a[q]] + alpha * (i + gamma * maxValue(q, next[q]));
 }
 
-function QCalculation2(q, i) {
-	Q[q][s[q]][a[q]] = (1 - alpha) * Q[q][s[q]][a[q]] + alpha * (i + gamma * minValue(q, next[q]));
-}
 
 function maxValue(q, n) {
 	var max = -100 * score;
@@ -129,17 +130,6 @@ function maxValue(q, n) {
 		}
 	}
 	return max;
-}
-
-function minValue(q, n) {
-	var min = 100 * score;
-	for (var i = 0; i < 9; i++) {
-		var r = Q[q][n][i];
-		if (min > r) {
-			min = r;
-		}
-	}
-	return min;
 }
 
 function endGame(q) {
@@ -169,7 +159,6 @@ function endGame(q) {
 
 function epsilonGreedy(q) {
 	var r;
-	// ep = epsilon * (episode - QCicle/2) / episode;
 	if (mode != -1) {
 		ep = 0;
 	}
@@ -204,3 +193,6 @@ function boardClear() {
 }
 
 Main(-1);
+Main(1);
+// Main(0);
+// Main(-1);
