@@ -84,8 +84,8 @@ function Main(m) {
 				break;
 			case 3:
 				draw++;
-				s1 = 0; //score/10;
-				s2 = 0; //score/10;
+				s1 = 0;
+				s2 = 0;
 				break;
 		}
 
